@@ -7,6 +7,7 @@ import EmployeeSearch from './Shared/EmployeeSearch';
 import ShiftView from './ShiftView';
 import ParticleBackground from './Shared/ParticleBackground';
 import CalendarSelector from './Shared/CalendarSelector';
+import MiniScheduleCalendar from './Shared/MiniScheduleCalendar';
 
 interface ScheduleData {
   employee: { name:string; id:string; team:string };
@@ -156,9 +157,20 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
     setViewingEmployeeId(employeeId);
     setViewingEmployeeData(null);
     setViewingEmployeeSchedule([]);
+    // Also clear the selected date to reset the view
+    setSelectedDate('');
+    setSelectedShift('');
   };
 
   const isViewingOtherEmployee = viewingEmployeeId !== employeeId;
+
+  // Function to check if there's a shift change for a specific date
+  const getShiftChangeForDate = (date: string) => {
+    if (!approvedRequests || approvedRequests.length === 0) return null;
+    
+    const changeForDate = approvedRequests.find(r => r.date === date && r.status === 'approved');
+    return changeForDate;
+  };
 
   const getAllEmployees = () => {
     if (!roster?.teams) return [];
@@ -244,7 +256,21 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
                   Today ({isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.today.date : data.today.date || 'N/A'}):
                 </div>
                 <div className="shift-code">
-                  {isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.today.shift : data.today.shift}
+                  {(() => {
+                    const todayDate = isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.today.date : data.today.date;
+                    const todayShift = isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.today.shift : data.today.shift;
+                    const change = !isViewingOtherEmployee && todayDate ? getShiftChangeForDate(todayDate) : null;
+                    
+                    if (change) {
+                      return (
+                        <>
+                          <span className="shift-previous">{change.current_shift || change.requester_shift}</span>
+                          <span className="shift-current">{todayShift}</span>
+                        </>
+                      );
+                    }
+                    return todayShift;
+                  })()}
                 </div>
               </div>
               <div className="shift-row">
@@ -252,7 +278,21 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
                   Tomorrow ({isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.tomorrow.date : data.tomorrow.date || 'N/A'}):
                 </div>
                 <div className="shift-code">
-                  {isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.tomorrow.shift : data.tomorrow.shift}
+                  {(() => {
+                    const tomorrowDate = isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.tomorrow.date : data.tomorrow.date;
+                    const tomorrowShift = isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.tomorrow.shift : data.tomorrow.shift;
+                    const change = !isViewingOtherEmployee && tomorrowDate ? getShiftChangeForDate(tomorrowDate) : null;
+                    
+                    if (change) {
+                      return (
+                        <>
+                          <span className="shift-previous">{change.current_shift || change.requester_shift}</span>
+                          <span className="shift-current">{tomorrowShift}</span>
+                        </>
+                      );
+                    }
+                    return tomorrowShift;
+                  })()}
                 </div>
               </div>
               
@@ -263,14 +303,27 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
                 </div>
               )}
 
-              <div className="actions-row" style={{marginTop:14, flexWrap: 'wrap'}}>
-                {!isViewingOtherEmployee && (
-                  <>
-                    <button className="btn primary small" onClick={openShiftChange}>✏️ Request Shift Change</button>
-                    <button className="btn small" onClick={openSwap}>🔁 Request Swap</button>
-                  </>
+              <div style={{display: 'flex', gap: '20px', marginTop: 14, flexWrap: 'wrap'}}>
+                {!isViewingOtherEmployee && headers.length > 0 && mySchedule.length > 0 && (
+                  <div className="mini-calendar-section">
+                    <MiniScheduleCalendar 
+                      headers={headers}
+                      schedule={mySchedule}
+                    />
+                  </div>
                 )}
-                {roster && <ShiftView roster={roster} headers={headers} />}
+                
+                <div style={{flex: 1, minWidth: '250px'}}>
+                  <div className="actions-row" style={{marginBottom: 10, flexWrap: 'wrap'}}>
+                    {!isViewingOtherEmployee && (
+                      <>
+                        <button className="btn primary small" onClick={openShiftChange}>✏️ Request Shift Change</button>
+                        <button className="btn small" onClick={openSwap}>🔁 Request Swap</button>
+                      </>
+                    )}
+                    {roster && <ShiftView roster={roster} headers={headers} />}
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -28,16 +28,16 @@ export default function ShiftView({ roster, headers }: Props) {
       if (selectedTeam && teamName !== selectedTeam) return;
       
       employees.forEach((emp: any) => {
-        const shift = emp.schedule[dateIndex];
+        const shift = emp.schedule[dateIndex] || '';
+        // Apply shift filter if specified
         if (selectedShift && shift !== selectedShift) return;
-        if (shift) {
-          results.push({
-            name: emp.name,
-            id: emp.id,
-            team: teamName,
-            shift: shift
-          });
-        }
+        // Show employee regardless of whether they have a shift
+        results.push({
+          name: emp.name,
+          id: emp.id,
+          team: teamName,
+          shift: shift || 'N/A'
+        });
       });
     });
 
