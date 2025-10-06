@@ -508,6 +508,24 @@
   font-weight: 600;
 }
 
+.stat-chip.clickable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.stat-chip.clickable:hover {
+  background: linear-gradient(135deg, #3A4150 0%, #4A5A6D 100%);
+  border-color: #5A6A7D;
+  color: #E5EAF0;
+}
+
+.stat-chip.clickable.active {
+  background: linear-gradient(135deg, #4A7BD0 0%, #3D64A8 100%);
+  border-color: #4A7BD0;
+  color: white;
+  box-shadow: 0 2px 8px rgba(74, 123, 208, 0.4);
+}
+
 /* Profile Display */
 .profile-info-display {
   display: flex;
@@ -535,4 +553,80 @@
   font-size: 0.95rem;
   color: #E5EAF0;
   font-weight: 600;
+}
+
+/* Collapsible Sidebar Styles */
+.admin-sidebar.collapsed {
+  width: 70px;
+}
+
+.admin-sidebar.collapsed .admin-logo {
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.admin-sidebar.collapsed .admin-subtitle {
+  display: none;
+}
+
+.admin-sidebar.collapsed .sidebar-nav-item {
+  padding: 14px 10px;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.admin-sidebar.collapsed .admin-user-card {
+  padding: 8px;
+  justify-content: center;
+}
+
+.admin-sidebar.collapsed .user-details {
+  display: none;
+}
+
+.admin-sidebar.collapsed .user-icon {
+  width: 35px;
+  height: 35px;
+  font-size: 1.1rem;
+}
+
+.admin-sidebar.collapsed .logout-btn-sidebar {
+  display: none;
+}
+
+.admin-main-content {
+  transition: margin-left 0.3s ease;
+}
+
+.admin-sidebar.collapsed ~ .admin-main-content {
+  margin-left: 70px;
+}
+
+.sidebar-toggle-btn {
+  position: fixed;
+  top: 20px;
+  left: 290px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #4A7BD0 0%, #3D64A8 100%);
+  border: 1px solid #2A3140;
+  border-radius: 50%;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(74, 123, 208, 0.4);
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle-btn:hover {
+  background: linear-gradient(135deg, #5A8BE0 0%, #4D74B8 100%);
+  transform: scale(1.05);
+}
+
+.admin-sidebar.collapsed ~ .sidebar-toggle-btn {
+  left: 80px;
 }

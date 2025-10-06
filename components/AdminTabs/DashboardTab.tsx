@@ -38,13 +38,19 @@ export default function DashboardTab({ id }: Props) {
         const allRequests = requestsRes.all_requests || [];
         const swapRequests = allRequests.filter((r: any) => r.type === 'swap');
         
+        // Fix: Count swap requests properly
+        const totalSwaps = swapRequests.length;
+        const approvedSwaps = swapRequests.filter((r: any) => r.status === 'approved').length;
+        const rejectedSwaps = swapRequests.filter((r: any) => r.status === 'rejected').length;
+        const pendingSwaps = swapRequests.filter((r: any) => r.status === 'pending').length;
+        
         const swapStats = {
-          total: swapRequests.length,
-          accepted: swapRequests.filter((r: any) => r.status === 'approved').length,
-          rejected: swapRequests.filter((r: any) => r.status === 'rejected').length,
-          pending: swapRequests.filter((r: any) => r.status === 'pending').length,
-          acceptance_rate: swapRequests.length > 0 
-            ? Math.round((swapRequests.filter((r: any) => r.status === 'approved').length / swapRequests.length) * 100)
+          total: totalSwaps,
+          accepted: approvedSwaps,
+          rejected: rejectedSwaps,
+          pending: pendingSwaps,
+          acceptance_rate: totalSwaps > 0 
+            ? Math.round((approvedSwaps / totalSwaps) * 100)
             : 0
         };
 
@@ -178,12 +184,12 @@ export default function DashboardTab({ id }: Props) {
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* Audit Log */}
         <div className="dashboard-card full-width">
-          <h3>📋 Recent Activity</h3>
+          <h3>📝 Audit Log (Current Month)</h3>
           <div className="activity-list">
             {stats.recent_activity.length === 0 ? (
-              <div className="no-activity">No recent activity</div>
+              <div className="no-activity">No activity this month</div>
             ) : (
               stats.recent_activity.map((activity: any, idx: number) => (
                 <div key={idx} className="activity-item">
@@ -193,17 +199,20 @@ export default function DashboardTab({ id }: Props) {
                   <div className="activity-content">
                     <div className="activity-title">
                       {activity.type === 'swap' 
-                        ? `${activity.requester_name} requested swap with ${activity.target_employee_name}`
-                        : `${activity.employee_name} requested shift change`}
+                        ? `Swap Request: ${activity.requester_name || 'Unknown'} ⇄ ${activity.target_employee_name || 'Unknown'} (${activity.date})`
+                        : `Shift Change: ${activity.employee_name || 'Unknown'} requested change on ${activity.date}`}
                     </div>
                     <div className="activity-meta">
-                      <span>{activity.date}</span>
+                      <span>{new Date(activity.created_at).toLocaleString()}</span>
                       <span className={`activity-status ${activity.status}`}>{activity.status}</span>
                     </div>
                   </div>
                 </div>
               ))
             )}
+          </div>
+          <div style={{marginTop: 15, fontSize: '0.85rem', color: '#7E90A8', textAlign: 'center'}}>
+            Showing latest 10 activities. Full audit log coming soon with pagination.
           </div>
         </div>
       </div>
