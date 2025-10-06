@@ -160,6 +160,8 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
     // Also clear the selected date to reset the view
     setSelectedDate('');
     setSelectedShift('');
+    // Reset the calendar to hidden state
+    setShowCalendar(false);
   };
 
   const isViewingOtherEmployee = viewingEmployeeId !== employeeId;
@@ -304,7 +306,7 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
               )}
 
               <div style={{marginTop: 14}}>
-                {!isViewingOtherEmployee && headers.length > 0 && mySchedule.length > 0 && (
+                {headers.length > 0 && (isViewingOtherEmployee ? viewingEmployeeSchedule.length > 0 : mySchedule.length > 0) && (
                   <div style={{marginBottom: 10}}>
                     <button 
                       className="btn small" 
@@ -317,7 +319,7 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
                       <div className="mini-calendar-section">
                         <MiniScheduleCalendar 
                           headers={headers}
-                          schedule={mySchedule}
+                          schedule={isViewingOtherEmployee ? viewingEmployeeSchedule : mySchedule}
                           selectedDate={selectedDate}
                           onSelect={(d,s)=>onCalendarSelect(d,s)}
                         />
@@ -407,30 +409,7 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
               )}
             </div>
 
-            <div style={{marginTop: 40}}>
-              <h3 style={{margin:'0 0 10px'}}>My Requests</h3>
-              <div className="table-wrapper">
-                <table className="data-table small">
-                  <thead>
-                    <tr><th>ID</th><th>Type</th><th>Date</th><th>Status</th></tr>
-                  </thead>
-                  <tbody>
-                    {requests.length===0 && <tr><td colSpan={4}>No requests</td></tr>}
-                    {requests.slice(0,25).map(r=>(
-                      <tr key={r.id}>
-                        <td>{r.id}</td>
-                        <td>{r.type==='swap'?'Swap':'Change'}</td>
-                        <td>{r.date}</td>
-                        <td className={`status ${r.status}`}>{r.status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div style={{fontSize:'.55rem', color:'#7D91A5', marginTop:6}}>
-                Showing latest {Math.min(requests.length,25)}
-              </div>
-            </div>
+
           </>
         }
       </div>
