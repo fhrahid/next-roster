@@ -4,6 +4,7 @@ export const ADMIN_DATA_FILE = `${DATA_DIR}/admin_data.json`;
 export const MODIFIED_SHIFTS_FILE = `${DATA_DIR}/modified_shifts.json`;
 export const GOOGLE_LINKS_FILE = `${DATA_DIR}/google_links.json`;
 export const SCHEDULE_REQUESTS_FILE = `${DATA_DIR}/schedule_requests.json`;
+export const ADMIN_USERS_FILE = `${DATA_DIR}/admin_users.json`;
 
 export const SHIFT_MAP: Record<string,string> = {
   M2:"8 AM – 5 PM",

@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import { cookies } from 'next/headers';
-import { ADMIN_SESSION_COOKIE } from './constants';
+import { ADMIN_SESSION_COOKIE, ADMIN_USERS_FILE } from './constants';
+import { readJSON, writeJSON } from './utils';
+import { AdminUsersFile, AdminUser } from './types';
 
 interface SessionValue {
   username: string;
@@ -49,9 +51,60 @@ export function requireAdmin(): string {
 
 export function validateAdminLogin(username: string, password: string): boolean {
   try {
+    // First try file-based system
+    const adminUsers: AdminUsersFile = readJSON(ADMIN_USERS_FILE, { users: [] });
+    const found = adminUsers.users.find((u: AdminUser) => 
+      u.username === username && u.password === password
+    );
+    if (found) return true;
+    
+    // Fallback to environment variable
     const arr = JSON.parse(process.env.ADMIN_USERS_JSON || '[]');
     return !!arr.find((u:any)=>u.username===username && u.password===password);
   } catch {
     return false;
   }
+}
+
+export function getAdminUsers(): AdminUsersFile {
+  return readJSON(ADMIN_USERS_FILE, { users: [] });
+}
+
+export function saveAdminUsers(data: AdminUsersFile) {
+  writeJSON(ADMIN_USERS_FILE, data);
+}
+
+export function addAdminUser(user: Omit<AdminUser, 'created_at'>): AdminUser {
+  const adminUsers = getAdminUsers();
+  const newUser: AdminUser = {
+    ...user,
+    created_at: new Date().toISOString()
+  };
+  adminUsers.users.push(newUser);
+  saveAdminUsers(adminUsers);
+  return newUser;
+}
+
+export function updateAdminUser(username: string, updates: Partial<AdminUser>): boolean {
+  const adminUsers = getAdminUsers();
+  const userIndex = adminUsers.users.findIndex(u => u.username === username);
+  if (userIndex === -1) return false;
+  
+  adminUsers.users[userIndex] = {
+    ...adminUsers.users[userIndex],
+    ...updates
+  };
+  saveAdminUsers(adminUsers);
+  return true;
+}
+
+export function deleteAdminUser(username: string): boolean {
+  const adminUsers = getAdminUsers();
+  const initialLength = adminUsers.users.length;
+  adminUsers.users = adminUsers.users.filter(u => u.username !== username);
+  if (adminUsers.users.length < initialLength) {
+    saveAdminUsers(adminUsers);
+    return true;
+  }
+  return false;
 }
