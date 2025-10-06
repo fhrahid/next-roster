@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function ShiftView({ roster, headers }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedShift, setSelectedShift] = useState('');
   const [selectedTeam, setSelectedTeam] = useState('');
@@ -46,65 +46,57 @@ export default function ShiftView({ roster, headers }: Props) {
 
   const filteredEmployees = getEmployeesForDateAndShift();
 
-  if (!isOpen) {
-    return (
-      <button className="shift-view-trigger" onClick={() => setIsOpen(true)}>
-        <span className="shift-view-icon">👁️</span>
-        Shift View
-      </button>
-    );
-  }
-
   return (
-    <div className="shift-view-modal">
-      <div className="shift-view-overlay" onClick={() => setIsOpen(false)} />
-      <div className="shift-view-content">
-        <div className="shift-view-header">
-          <h3>Shift View</h3>
-          <button className="shift-view-close" onClick={() => setIsOpen(false)}>✕</button>
-        </div>
+    <div className={`shift-view-collapsible ${isExpanded ? 'expanded' : ''}`}>
+      <button className="shift-view-trigger" onClick={() => setIsExpanded(!isExpanded)}>
+        <span className="shift-view-icon">👁️</span>
+        <span>Shift View</span>
+        <span className="shift-view-arrow">{isExpanded ? '▲' : '▼'}</span>
+      </button>
 
-        <div className="shift-view-filters">
-          <div className="shift-view-filter-group">
-            <label>Select Date</label>
-            <DatePicker 
-              selectedDate={selectedDate}
-              onSelect={setSelectedDate}
-              availableDates={headers}
-            />
+      {isExpanded && (
+        <div className="shift-view-content-collapsible">
+          <div className="shift-view-filters">
+            <div className="shift-view-filter-group">
+              <label>Select Date</label>
+              <DatePicker 
+                selectedDate={selectedDate}
+                onSelect={setSelectedDate}
+                availableDates={headers}
+              />
+            </div>
+
+            <div className="shift-view-filter-group">
+              <label>Filter by Shift</label>
+              <select 
+                value={selectedShift} 
+                onChange={(e) => setSelectedShift(e.target.value)}
+                className="shift-view-select"
+              >
+                <option value="">All Shifts</option>
+                {shiftCodes.map(code => (
+                  <option key={code} value={code}>{code}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="shift-view-filter-group">
+              <label>Filter by Team</label>
+              <select 
+                value={selectedTeam} 
+                onChange={(e) => setSelectedTeam(e.target.value)}
+                className="shift-view-select"
+              >
+                <option value="">All Teams</option>
+                {teams.map(team => (
+                  <option key={team} value={team}>{team}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="shift-view-filter-group">
-            <label>Filter by Shift</label>
-            <select 
-              value={selectedShift} 
-              onChange={(e) => setSelectedShift(e.target.value)}
-              className="shift-view-select"
-            >
-              <option value="">All Shifts</option>
-              {shiftCodes.map(code => (
-                <option key={code} value={code}>{code}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="shift-view-filter-group">
-            <label>Filter by Team</label>
-            <select 
-              value={selectedTeam} 
-              onChange={(e) => setSelectedTeam(e.target.value)}
-              className="shift-view-select"
-            >
-              <option value="">All Teams</option>
-              {teams.map(team => (
-                <option key={team} value={team}>{team}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {selectedDate && (
-          <div className="shift-view-results">
+          {selectedDate && (
+            <div className="shift-view-results">
             <div className="shift-view-results-header">
               <h4>Employees on {selectedDate}</h4>
               <span className="shift-view-count">{filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''}</span>
@@ -135,10 +127,11 @@ export default function ShiftView({ roster, headers }: Props) {
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
-        )}
-      </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

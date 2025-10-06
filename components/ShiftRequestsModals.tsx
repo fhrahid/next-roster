@@ -2,6 +2,7 @@
 import Modal from './Shared/Modal';
 import { useState, useEffect } from 'react';
 import DatePicker from './Shared/DatePicker';
+import MiniCalendar from './Shared/MiniCalendar';
 
 interface ShiftChangeProps {
   open: boolean;
@@ -225,11 +226,12 @@ export function SwapRequestModal(props:SwapProps) {
 
       <div className="form-group">
         <label>Select Date</label>
-        {headers && headers.length > 0 ? (
-          <DatePicker 
+        {headers && mySchedule && headers.length > 0 ? (
+          <MiniCalendar 
+            headers={headers}
+            schedule={mySchedule}
             selectedDate={selectedDate}
             onSelect={setSelectedDate}
-            availableDates={headers}
           />
         ) : (
           <input type="text" value={selectedDate} disabled />
