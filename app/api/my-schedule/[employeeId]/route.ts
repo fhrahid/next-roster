@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDisplay, findEmployeeInGoogle } from '@/lib/dataStore';
 import { formatDateHeader } from '@/lib/utils';
+import { SHIFT_MAP } from '@/lib/constants';
 
 export async function GET(_: NextRequest, { params }:{params:{employeeId:string}}) {
   const employeeId = params.employeeId;
@@ -18,14 +19,16 @@ export async function GET(_: NextRequest, { params }:{params:{employeeId:string}
   const tomorrowLabel = headers.find(h=>h===formatDateHeader(tomorrow)) || headers.find(h=>h.includes(formatDateHeader(tomorrow)));
 
   function getShift(label:string|undefined) {
-    if (!label) return 'N/A';
+    if (!label) return { code: 'N/A', time: 'N/A' };
     const idx = headers.indexOf(label);
-    if (idx===-1) return 'N/A';
+    if (idx===-1) return { code: 'N/A', time: 'N/A' };
     const code = employee.schedule[idx] || '';
-    return code || 'N/A';
+    const shiftCode = code || 'N/A';
+    const shiftTime = SHIFT_MAP[code] || code || 'N/A';
+    return { code: shiftCode, time: shiftTime };
   }
-  const todayShiftCode = getShift(todayLabel);
-  const tomorrowShiftCode = getShift(tomorrowLabel);
+  const todayShift = getShift(todayLabel);
+  const tomorrowShift = getShift(tomorrowLabel);
 
   // upcoming work days next 7
   const upcoming: any[] = [];
@@ -36,12 +39,15 @@ export async function GET(_: NextRequest, { params }:{params:{employeeId:string}
     if (actual) {
       const idx = headers.indexOf(actual);
       const sc = employee.schedule[idx]||'';
-      if (sc && sc!=='DO') upcoming.push({
-        date: actual,
-        day: d.toLocaleDateString('en-US',{weekday:'long'}),
-        shift: sc,
-        shift_code: sc
-      });
+      if (sc && sc!=='DO') {
+        const shiftTime = SHIFT_MAP[sc] || sc;
+        upcoming.push({
+          date: actual,
+          day: d.toLocaleDateString('en-US',{weekday:'long'}),
+          shift: shiftTime,
+          shift_code: sc
+        });
+      }
     }
   }
 
@@ -58,10 +64,11 @@ export async function GET(_: NextRequest, { params }:{params:{employeeId:string}
         const dow = d.getDay();
         const weekend = dow===0||dow===6;
         if (!weekend || ['SL','CL','EL'].includes(sc)) {
+          const typeDisplay = SHIFT_MAP[sc] || sc || 'N/A';
           planned.push({
             date: actual,
             day: d.toLocaleDateString('en-US',{weekday:'long'}),
-            type: sc || 'N/A',
+            type: typeDisplay,
             shift_code: sc
           });
         }
@@ -77,12 +84,14 @@ export async function GET(_: NextRequest, { params }:{params:{employeeId:string}
       const cur = employee.schedule[i];
       const orig = googleRef.employee.schedule[i];
       if (cur!==orig && orig!=='') {
+        const origTime = SHIFT_MAP[orig] || orig;
+        const curTime = SHIFT_MAP[cur] || cur;
         changes.push({
           date: hdr,
-            original_shift: orig,
-            current_shift: cur,
-            original_code: orig,
-            current_code: cur
+          original_shift: origTime,
+          current_shift: curTime,
+          original_code: orig,
+          current_code: cur
         });
       }
     });
@@ -91,8 +100,8 @@ export async function GET(_: NextRequest, { params }:{params:{employeeId:string}
   return NextResponse.json({
     success:true,
     employee: { name: employee.name, id: employee.id, team: employee.currentTeam||''},
-    today: {date: todayLabel, shift: todayShiftCode, shift_code: todayShiftCode},
-    tomorrow: {date: tomorrowLabel, shift: tomorrowShiftCode, shift_code: tomorrowShiftCode},
+    today: {date: todayLabel, shift: todayShift.time, shift_code: todayShift.code},
+    tomorrow: {date: tomorrowLabel, shift: tomorrowShift.time, shift_code: tomorrowShift.code},
     upcoming_work_days: upcoming.slice(0,5),
     planned_time_off: planned.slice(0,10),
     shift_changes: changes.slice(0,10),

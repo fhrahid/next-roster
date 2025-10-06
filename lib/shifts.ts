@@ -39,44 +39,46 @@ export function applySwap(req: any, approvedBy: string) {
   const admin = getAdmin();
   const idx = admin.headers.indexOf(req.date);
   if (idx === -1) return;
-  let requesterRef: {emp:any, team:string}|null = null;
-  let targetRef: {emp:any, team:string}|null = null;
+  
+  type RefType = {emp:any, team:string};
+  let requesterRef: RefType|undefined = undefined;
+  let targetRef: RefType|undefined = undefined;
 
   for (const [team, emps] of Object.entries(admin.teams)) {
-    emps.forEach(e=>{
+    (emps as any[]).forEach((e:any)=>{
       if (e.id===req.requester_id) requesterRef = {emp:e, team};
       if (e.id===req.target_employee_id) targetRef = {emp:e, team};
     });
   }
-  if (requesterRef && targetRef) {
-    const rOld = requesterRef.emp.schedule[idx];
-    const tOld = targetRef.emp.schedule[idx];
-    requesterRef.emp.schedule[idx] = tOld;
-    targetRef.emp.schedule[idx] = rOld;
-    // track
-    // For simplicity old shift from google can't be easily known; we keep old->new
-    // you may want to store google original if needed (pass them in request)
-    trackModifiedShift(
-      requesterRef.emp.id,
-      idx,
-      rOld,
-      tOld,
-      requesterRef.emp.name,
-      requesterRef.team,
-      admin.headers[idx],
-      `Swap Request (Approved by ${approvedBy})`
-    );
-    trackModifiedShift(
-      targetRef.emp.id,
-      idx,
-      tOld,
-      rOld,
-      targetRef.emp.name,
-      targetRef.team,
-      admin.headers[idx],
-      `Swap Request (Approved by ${approvedBy})`
-    );
-    setAdmin(admin);
-    mergeDisplay();
-  }
+  if (!requesterRef || !targetRef) return;
+  
+  const rOld = (requesterRef as any).emp.schedule[idx];
+  const tOld = (targetRef as any).emp.schedule[idx];
+  (requesterRef as any).emp.schedule[idx] = tOld;
+  (targetRef as any).emp.schedule[idx] = rOld;
+  // track
+  // For simplicity old shift from google can't be easily known; we keep old->new
+  // you may want to store google original if needed (pass them in request)
+  trackModifiedShift(
+    (requesterRef as any).emp.id,
+    idx,
+    rOld,
+    tOld,
+    (requesterRef as any).emp.name,
+    (requesterRef as any).team,
+    admin.headers[idx],
+    `Swap Request (Approved by ${approvedBy})`
+  );
+  trackModifiedShift(
+    (targetRef as any).emp.id,
+    idx,
+    tOld,
+    rOld,
+    (targetRef as any).emp.name,
+    (targetRef as any).team,
+    admin.headers[idx],
+    `Swap Request (Approved by ${approvedBy})`
+  );
+  setAdmin(admin);
+  mergeDisplay();
 }

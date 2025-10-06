@@ -274,3 +274,4 @@ export function findEmployeeInGoogle(employeeId: string) {
 }
 
 // IMPORTANT: call loadAll() initially
+loadAll();
