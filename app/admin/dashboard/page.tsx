@@ -1,7 +1,9 @@
 import AdminLayoutShell from '@/components/AdminLayoutShell';
+import DashboardTab from '@/components/AdminTabs/DashboardTab';
 import DataSyncTab from '@/components/AdminTabs/DataSyncTab';
 import GoogleLinksTab from '@/components/AdminTabs/GoogleLinksTab';
 import TeamManagementTab from '@/components/AdminTabs/TeamManagementTab';
+import UserManagementTab from '@/components/AdminTabs/UserManagementTab';
 import ScheduleRequestsTab from '@/components/AdminTabs/ScheduleRequestsTab';
 import GoogleDataTab from '@/components/AdminTabs/GoogleDataTab';
 import AdminDataTab from '@/components/AdminTabs/AdminDataTab';
@@ -16,11 +18,12 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminLayoutShell adminUser={user}>
+      <DashboardTab id="dashboard" />
+      <ScheduleRequestsTab id="schedule-requests" />
+      <TeamManagementTab id="team-management" />
+      <UserManagementTab id="user-management" />
       <DataSyncTab id="data-sync" />
       <GoogleLinksTab id="google-links" />
-      <TeamManagementTab id="team-management" />
-      <ScheduleRequestsTab id="schedule-requests" />
-      <ModifiedShiftsTab id="modified-shifts" />
       <GoogleDataTab id="google-data" />
       <AdminDataTab id="admin-data" />
       <CsvImportTab id="csv-import" />
