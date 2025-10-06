@@ -2,6 +2,10 @@
 import { useEffect, useState } from 'react';
 import Calendar from './Calendar';
 import { ShiftChangeModal, SwapRequestModal } from './ShiftRequestsModals';
+import StatCard from './Shared/StatCard';
+import EmployeeSearch from './Shared/EmployeeSearch';
+import ShiftView from './ShiftView';
+import ParticleBackground from './Shared/ParticleBackground';
 
 interface ScheduleData {
   employee: { name:string; id:string; team:string };
@@ -106,21 +110,10 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
   }
 
   async function openShiftChange() {
-    if (!selectedDate) { alert('Select a date on the calendar first'); return; }
     setShowChange(true);
   }
 
   async function openSwap() {
-    if (!selectedDate) { alert('Select a date on the calendar first'); return; }
-    if (!data) return;
-    // fetch team members with shift on that date
-    const res = await fetch('/api/schedule-requests/get-team-members',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({teamName:data.employee.team, currentEmployeeId:employeeId, date:selectedDate})
-    }).then(r=>r.json());
-    if (!res.success) { alert(res.error||'Could not load teammates'); return; }
-    setTeamMembers(res.teamMembers);
     setShowSwap(true);
   }
 
@@ -130,13 +123,39 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
     return mySchedule[idx] || '';
   }
 
+  const handleEmployeeSearch = async (employee: any) => {
+    // Navigate to view another employee's schedule
+    const res = await fetch(`/api/my-schedule/${employee.id}`);
+    const j = await res.json();
+    if (j.success) {
+      // Display a modal or section with the employee's schedule
+      alert(`Viewing ${employee.name}'s schedule - Feature can be expanded`);
+    }
+  };
+
+  const getAllEmployees = () => {
+    if (!roster?.teams) return [];
+    const employees: any[] = [];
+    Object.entries(roster.teams).forEach(([teamName, teamEmployees]: [string, any]) => {
+      teamEmployees.forEach((emp: any) => {
+        employees.push({
+          id: emp.id,
+          name: emp.name,
+          team: teamName
+        });
+      });
+    });
+    return employees;
+  };
+
   return (
     <div className="container">
-      <header>
+      <ParticleBackground />
+      <header style={{position: 'relative', zIndex: 1}}>
         <h1>🛒 Cartup CxP Roster Viewer 🛒</h1>
         <p className="subtitle">Employee Schedule Portal</p>
       </header>
-      <div className="app-container">
+      <div className="app-container" style={{position: 'relative', zIndex: 1}}>
         <div className="app-header">
           <div>
             <h2>Shift Dashboard</h2>
@@ -180,142 +199,82 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
                 <div className="shift-label">Tomorrow ({data.tomorrow.date || 'N/A'}):</div>
                 <div className="shift-code">{data.tomorrow.shift}</div>
               </div>
-              <div className="actions-row" style={{marginTop:14}}>
-                <button className="btn primary small" onClick={openShiftChange} disabled={!selectedDate}>✏️ Request Shift Change</button>
-                <button className="btn small" onClick={openSwap} disabled={!selectedDate}>🔁 Request Swap</button>
-                <span style={{fontSize:'.6rem', letterSpacing:'.8px', color:'#8094AA'}}>
-                  Selected: {selectedDate ? `${selectedDate} (${myShiftForDate(selectedDate) || 'N/A'})` : 'None'}
-                </span>
+              <div className="actions-row" style={{marginTop:14, flexWrap: 'wrap'}}>
+                <button className="btn primary small" onClick={openShiftChange}>✏️ Request Shift Change</button>
+                <button className="btn small" onClick={openSwap}>🔁 Request Swap</button>
+                {roster && <ShiftView roster={roster} headers={headers} />}
               </div>
             </div>
+
+            {roster && getAllEmployees().length > 0 && (
+              <div style={{marginTop: 20}}>
+                <h3 style={{marginBottom: 10}}>Search Other Employees</h3>
+                <EmployeeSearch 
+                  employees={getAllEmployees()}
+                  onSelect={handleEmployeeSearch}
+                  placeholder="Search employees by name, ID, or team..."
+                />
+              </div>
+            )}
 
             <div className="dashboard-stats">
-              <div className="stat-card">
-                <div className="stat-card-header">
-                  <div className="stat-icon">📅</div>
-                  <div className="stat-content">
-                    <div className="stat-number">{data.summary.next_work_days_count}</div>
-                    <div className="stat-label">Upcoming Days</div>
-                    <div className="stat-subtitle">Next 7 view</div>
-                  </div>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card-header">
-                  <div className="stat-icon">🏖️</div>
-                  <div className="stat-content">
-                    <div className="stat-number">{data.summary.planned_time_off_count}</div>
-                    <div className="stat-label">Planned Time Off</div>
-                    <div className="stat-subtitle">30 days span</div>
-                  </div>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card-header">
-                  <div className="stat-icon">🔄</div>
-                  <div className="stat-content">
-                    <div className="stat-number">{data.summary.shift_changes_count}</div>
-                    <div className="stat-label">Shift Changes</div>
-                    <div className="stat-subtitle">Vs original</div>
-                  </div>
-                </div>
-              </div>
+              <StatCard
+                icon="📅"
+                value={data.summary.next_work_days_count}
+                label="Upcoming Days"
+                subtitle="Next 7 view"
+                details={data.upcoming_work_days}
+                detailsType="workdays"
+              />
+              <StatCard
+                icon="🏖️"
+                value={data.summary.planned_time_off_count}
+                label="Planned Time Off"
+                subtitle="30 days span"
+                details={data.planned_time_off}
+                detailsType="timeoff"
+              />
+              <StatCard
+                icon="🔄"
+                value={data.summary.shift_changes_count}
+                label="Shift Changes"
+                subtitle="Vs original"
+                details={data.shift_changes}
+                detailsType="changes"
+              />
             </div>
 
-            <h3 style={{marginTop:10}}>Calendar</h3>
-            <Calendar
-              headers={headers}
-              schedule={mySchedule}
-              onSelect={(d,s)=>onCalendarSelect(d,s)}
-            />
+            <div style={{marginTop: 30}}>
+              <h3 style={{marginBottom: 10}}>My Schedule Calendar</h3>
+              <Calendar
+                headers={headers}
+                schedule={mySchedule}
+                onSelect={(d,s)=>onCalendarSelect(d,s)}
+              />
+            </div>
 
-            <div style={{display:'grid', gap:22, gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', marginTop:40}}>
-              <div>
-                <h3 style={{margin:'0 0 10px'}}>Upcoming Work Days</h3>
-                <div className="table-wrapper">
-                  <table className="data-table small">
-                    <thead>
-                      <tr><th>Date</th><th>Day</th><th>Shift</th></tr>
-                    </thead>
-                    <tbody>
-                      {data.upcoming_work_days.length===0 && <tr><td colSpan={3}>None</td></tr>}
-                      {data.upcoming_work_days.map((d:any)=>(
-                        <tr key={d.date}>
-                          <td>{d.date}</td>
-                          <td>{d.day}</td>
-                          <td>{d.shift}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+            <div style={{marginTop: 40}}>
+              <h3 style={{margin:'0 0 10px'}}>My Requests</h3>
+              <div className="table-wrapper">
+                <table className="data-table small">
+                  <thead>
+                    <tr><th>ID</th><th>Type</th><th>Date</th><th>Status</th></tr>
+                  </thead>
+                  <tbody>
+                    {requests.length===0 && <tr><td colSpan={4}>No requests</td></tr>}
+                    {requests.slice(0,25).map(r=>(
+                      <tr key={r.id}>
+                        <td>{r.id}</td>
+                        <td>{r.type==='swap'?'Swap':'Change'}</td>
+                        <td>{r.date}</td>
+                        <td className={`status ${r.status}`}>{r.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-
-              <div>
-                <h3 style={{margin:'0 0 10px'}}>Planned Time Off</h3>
-                <div className="table-wrapper">
-                  <table className="data-table small">
-                    <thead>
-                      <tr><th>Date</th><th>Day</th><th>Code</th></tr>
-                    </thead>
-                    <tbody>
-                      {data.planned_time_off.length===0 && <tr><td colSpan={3}>None</td></tr>}
-                      {data.planned_time_off.map((d:any)=>(
-                        <tr key={d.date}>
-                          <td>{d.date}</td>
-                          <td>{d.day}</td>
-                          <td>{d.type}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div>
-                <h3 style={{margin:'0 0 10px'}}>Recent Shift Changes</h3>
-                <div className="table-wrapper">
-                  <table className="data-table small">
-                    <thead>
-                      <tr><th>Date</th><th>Orig</th><th>Now</th></tr>
-                    </thead>
-                    <tbody>
-                      {data.shift_changes.length===0 && <tr><td colSpan={3}>None</td></tr>}
-                      {data.shift_changes.map((c:any)=>(
-                        <tr key={c.date}>
-                          <td>{c.date}</td>
-                          <td>{c.original_shift}</td>
-                          <td className="status approved">{c.current_shift}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div>
-                <h3 style={{margin:'0 0 10px'}}>My Requests</h3>
-                <div className="table-wrapper">
-                  <table className="data-table small">
-                    <thead>
-                      <tr><th>ID</th><th>Type</th><th>Date</th><th>Status</th></tr>
-                    </thead>
-                    <tbody>
-                      {requests.length===0 && <tr><td colSpan={4}>No requests</td></tr>}
-                      {requests.slice(0,25).map(r=>(
-                        <tr key={r.id}>
-                          <td>{r.id}</td>
-                          <td>{r.type==='swap'?'Swap':'Change'}</td>
-                          <td>{r.date}</td>
-                          <td className={`status ${r.status}`}>{r.status}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div style={{fontSize:'.55rem', color:'#7D91A5', marginTop:6}}>
-                  Showing latest {Math.min(requests.length,25)}
-                </div>
+              <div style={{fontSize:'.55rem', color:'#7D91A5', marginTop:6}}>
+                Showing latest {Math.min(requests.length,25)}
               </div>
             </div>
           </>
@@ -331,6 +290,8 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
           team={data.employee.team}
           date={selectedDate}
           currentShift={myShiftForDate(selectedDate)}
+          headers={headers}
+          mySchedule={mySchedule}
           onSubmitted={()=>{ loadRequests(); }}
         />
       }
@@ -339,13 +300,15 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
         <SwapRequestModal
           open={showSwap}
           onClose={()=>setShowSwap(false)}
-            requesterId={employeeId}
-            requesterName={data.employee.name}
-            team={data.employee.team}
-            date={selectedDate}
-            requesterShift={myShiftForDate(selectedDate)}
-            teamMembers={teamMembers}
-            onSubmitted={()=>{ loadRequests(); }}
+          requesterId={employeeId}
+          requesterName={data.employee.name}
+          team={data.employee.team}
+          date={selectedDate}
+          requesterShift={myShiftForDate(selectedDate)}
+          teamMembers={teamMembers}
+          headers={headers}
+          mySchedule={mySchedule}
+          onSubmitted={()=>{ loadRequests(); }}
         />
       }
     </div>
