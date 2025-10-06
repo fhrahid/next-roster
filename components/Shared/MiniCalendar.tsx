@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import { SHIFT_MAP } from '@/lib/constants';
 
 interface Props {
   headers: string[];
@@ -15,6 +16,7 @@ export default function MiniCalendar({ headers, schedule, selectedDate, onSelect
     return headers.map((h, i) => ({
       date: h,
       shift: schedule[i] || '',
+      shiftTime: SHIFT_MAP[schedule[i] || ''] || schedule[i] || 'N/A',
       isOff: ['DO', 'SL', 'CL', 'EL', ''].includes(schedule[i] || '')
     }));
   };
@@ -49,7 +51,7 @@ export default function MiniCalendar({ headers, schedule, selectedDate, onSelect
   };
 
   return (
-    <div className="mini-calendar">
+    <div className="mini-calendar-win11">
       <div className="mini-calendar-header">
         <button 
           className="mini-calendar-nav"
@@ -77,16 +79,16 @@ export default function MiniCalendar({ headers, schedule, selectedDate, onSelect
         </span>
       </div>
 
-      <div className="mini-calendar-grid">
+      <div className="mini-calendar-grid-win11">
         {currentDays.map(day => (
           <button
             key={day.date}
-            className={`mini-calendar-day ${day.isOff ? 'off-day' : 'work-day'} ${day.date === selectedDate ? 'selected' : ''}`}
+            className={`mini-calendar-day-win11 ${day.isOff ? 'off-day' : 'work-day'} ${day.date === selectedDate ? 'selected' : ''}`}
             onClick={() => onSelect(day.date)}
-            title={`${day.date} - ${day.shift || 'N/A'}`}
+            title={`${day.date} - ${day.shiftTime}`}
           >
-            <span className="mini-cal-date">{day.date.split(' ')[1] || day.date}</span>
-            <span className="mini-cal-shift">{day.shift || '—'}</span>
+            <span className="mini-cal-date-win11">{day.date.split(' ')[1] || day.date}</span>
+            <span className="mini-cal-shift-time">{day.shiftTime}</span>
           </button>
         ))}
       </div>

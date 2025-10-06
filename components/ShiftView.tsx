@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
-import DatePicker from './Shared/DatePicker';
+import MiniCalendar from './Shared/MiniCalendar';
+import { SHIFT_MAP } from '@/lib/constants';
 
 interface Props {
   roster: any;
@@ -10,8 +11,8 @@ interface Props {
 export default function ShiftView({ roster, headers }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedShift, setSelectedShift] = useState('');
-  const [selectedTeam, setSelectedTeam] = useState('');
+  const [selectedShifts, setSelectedShifts] = useState<string[]>([]);
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
   const shiftCodes = ['M2', 'M3', 'M4', 'D1', 'D2', 'DO', 'SL', 'CL', 'EL'];
   const teams = roster?.teams ? Object.keys(roster.teams) : [];
@@ -25,17 +26,18 @@ export default function ShiftView({ roster, headers }: Props) {
     const results: any[] = [];
     
     Object.entries(roster.teams).forEach(([teamName, employees]: [string, any]) => {
-      if (selectedTeam && teamName !== selectedTeam) return;
+      if (selectedTeams.length > 0 && !selectedTeams.includes(teamName)) return;
       
       employees.forEach((emp: any) => {
         const shift = emp.schedule[dateIndex];
-        if (selectedShift && shift !== selectedShift) return;
+        if (selectedShifts.length > 0 && !selectedShifts.includes(shift)) return;
         if (shift) {
           results.push({
             name: emp.name,
             id: emp.id,
             team: teamName,
-            shift: shift
+            shift: shift,
+            shiftTime: SHIFT_MAP[shift] || shift
           });
         }
       });
@@ -45,6 +47,25 @@ export default function ShiftView({ roster, headers }: Props) {
   };
 
   const filteredEmployees = getEmployeesForDateAndShift();
+
+  const handleShiftToggle = (shiftCode: string) => {
+    if (selectedShifts.includes(shiftCode)) {
+      setSelectedShifts(selectedShifts.filter(s => s !== shiftCode));
+    } else {
+      setSelectedShifts([...selectedShifts, shiftCode]);
+    }
+  };
+
+  const handleTeamToggle = (team: string) => {
+    if (selectedTeams.includes(team)) {
+      setSelectedTeams(selectedTeams.filter(t => t !== team));
+    } else {
+      setSelectedTeams([...selectedTeams, team]);
+    }
+  };
+
+  // Get a dummy schedule for calendar (all dates with empty shifts)
+  const dummySchedule = headers.map(() => '');
 
   return (
     <div className={`shift-view-collapsible ${isExpanded ? 'expanded' : ''}`}>
@@ -59,39 +80,42 @@ export default function ShiftView({ roster, headers }: Props) {
           <div className="shift-view-filters">
             <div className="shift-view-filter-group">
               <label>Select Date</label>
-              <DatePicker 
+              <MiniCalendar 
+                headers={headers}
+                schedule={dummySchedule}
                 selectedDate={selectedDate}
                 onSelect={setSelectedDate}
-                availableDates={headers}
               />
             </div>
 
             <div className="shift-view-filter-group">
-              <label>Filter by Shift</label>
-              <select 
-                value={selectedShift} 
-                onChange={(e) => setSelectedShift(e.target.value)}
-                className="shift-view-select"
-              >
-                <option value="">All Shifts</option>
+              <label>Filter by Shift Times (Multiple)</label>
+              <div className="multi-select-chips">
                 {shiftCodes.map(code => (
-                  <option key={code} value={code}>{code}</option>
+                  <button
+                    key={code}
+                    className={`chip-btn ${selectedShifts.includes(code) ? 'selected' : ''}`}
+                    onClick={() => handleShiftToggle(code)}
+                  >
+                    {SHIFT_MAP[code] || code}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
             <div className="shift-view-filter-group">
-              <label>Filter by Team</label>
-              <select 
-                value={selectedTeam} 
-                onChange={(e) => setSelectedTeam(e.target.value)}
-                className="shift-view-select"
-              >
-                <option value="">All Teams</option>
+              <label>Filter by Teams (Multiple)</label>
+              <div className="multi-select-chips">
                 {teams.map(team => (
-                  <option key={team} value={team}>{team}</option>
+                  <button
+                    key={team}
+                    className={`chip-btn ${selectedTeams.includes(team) ? 'selected' : ''}`}
+                    onClick={() => handleTeamToggle(team)}
+                  >
+                    {team}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
           </div>
 
@@ -112,7 +136,7 @@ export default function ShiftView({ roster, headers }: Props) {
                       <th>Name</th>
                       <th>ID</th>
                       <th>Team</th>
-                      <th>Shift</th>
+                      <th>Shift Time</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -121,7 +145,7 @@ export default function ShiftView({ roster, headers }: Props) {
                         <td>{emp.name}</td>
                         <td className="shift-view-id">{emp.id}</td>
                         <td className="shift-view-team">{emp.team}</td>
-                        <td className="shift-view-shift">{emp.shift}</td>
+                        <td className="shift-view-shift">{emp.shiftTime}</td>
                       </tr>
                     ))}
                   </tbody>

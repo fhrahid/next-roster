@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { SHIFT_MAP } from '@/lib/constants';
 
 interface Props { id: string; }
 
@@ -29,6 +30,7 @@ export default function ScheduleRequestsTab({id}:Props) {
   const [stats,setStats]=useState<any>({});
   const [loading,setLoading]=useState(false);
   const [viewAll,setViewAll]=useState(false);
+  const [filterView,setFilterView]=useState<'pending'|'approved'|'rejected'|'all'>('pending');
 
   async function load() {
     setLoading(true);
@@ -55,15 +57,20 @@ export default function ScheduleRequestsTab({id}:Props) {
 
   function renderRow(r:Request, pending:boolean) {
     const isShift = r.type==='shift_change';
+    // Generate display ID with employee name
+    const displayId = isShift 
+      ? `${r.employee_name || 'Unknown'} (${r.employee_id || 'N/A'})` 
+      : `${r.requester_name || 'Unknown'} (${r.requester_id || 'N/A'})`;
+    
     return (
       <tr key={r.id} className={pending?'pending-row':''}>
-        <td>{r.id}</td>
+        <td>{displayId}</td>
         <td>{r.type==='swap'? 'Swap':'Change'}</td>
         <td>{r.team}</td>
         <td>{r.date}</td>
         {isShift
-          ? <td>{r.current_shift} → {r.requested_shift}</td>
-          : <td>{r.requester_shift} ({r.requester_name}) ⇄ {r.target_shift} ({r.target_employee_name})</td>}
+          ? <td>{SHIFT_MAP[r.current_shift||''] || r.current_shift} → {SHIFT_MAP[r.requested_shift||''] || r.requested_shift}</td>
+          : <td>{SHIFT_MAP[r.requester_shift||''] || r.requester_shift} ({r.requester_name}) ⇄ {SHIFT_MAP[r.target_shift||''] || r.target_shift} ({r.target_employee_name})</td>}
         <td className={`status ${r.status}`}>{r.status}</td>
         <td className="truncate reason-cell" title={r.reason}>{r.reason}</td>
         <td>{new Date(r.created_at).toLocaleString()}</td>
@@ -78,6 +85,11 @@ export default function ScheduleRequestsTab({id}:Props) {
       </tr>
     );
   }
+  
+  const getFilteredRequests = () => {
+    if (filterView === 'all') return allRequests;
+    return allRequests.filter(r => r.status === filterView);
+  };
 
   useEffect(()=>{ load(); },[]);
 
@@ -86,45 +98,49 @@ export default function ScheduleRequestsTab({id}:Props) {
       <h2>📋 Schedule Requests</h2>
       <p>Approve or reject shift change and swap requests submitted by employees.</p>
       <div className="stats-bar">
-        <div className="stat-chip">Pending: {stats.pending_count||0}</div>
-        <div className="stat-chip">Approved: {stats.approved_count||0}</div>
+        <button 
+          className={`stat-chip clickable ${filterView==='pending'?'active':''}`}
+          onClick={()=>setFilterView('pending')}
+        >
+          Pending: {stats.pending_count||0}
+        </button>
+        <button 
+          className={`stat-chip clickable ${filterView==='approved'?'active':''}`}
+          onClick={()=>setFilterView('approved')}
+        >
+          Approved: {stats.approved_count||0}
+        </button>
+        <button 
+          className={`stat-chip clickable ${filterView==='rejected'?'active':''}`}
+          onClick={()=>setFilterView('rejected')}
+        >
+          Rejected: {stats.rejected_count||0}
+        </button>
         <div className="stat-chip">Shift Changes: {stats.total_shift_change||0}</div>
         <div className="stat-chip">Swaps: {stats.total_swap||0}</div>
         <button className="btn small" onClick={load}>🔄 Refresh</button>
-        <button className="btn small" onClick={()=>setViewAll(!viewAll)}>{viewAll? 'Hide All':'View All'}</button>
       </div>
-      <h3>Pending Requests</h3>
+      <h3>
+        {filterView === 'pending' && 'Pending Requests'}
+        {filterView === 'approved' && 'Approved Requests'}
+        {filterView === 'rejected' && 'Rejected Requests'}
+        {filterView === 'all' && 'All Requests'}
+      </h3>
       <div className="table-wrapper">
         <table className="data-table">
           <thead>
             <tr>
-              <th>ID</th><th>Type</th><th>Team</th><th>Date</th><th>Shift(s)</th><th>Status</th><th>Reason</th><th>Created</th><th>Actions</th>
+              <th>Employee</th><th>Type</th><th>Team</th><th>Date</th><th>Shift(s)</th><th>Status</th><th>Reason</th><th>Created</th><th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {pending.length===0 && <tr><td colSpan={9}>No pending requests</td></tr>}
-            {pending.map(r=>renderRow(r,true))}
+            {filterView === 'pending' && pending.length===0 && <tr><td colSpan={9}>No pending requests</td></tr>}
+            {filterView === 'pending' && pending.map(r=>renderRow(r,true))}
+            {filterView !== 'pending' && getFilteredRequests().length===0 && <tr><td colSpan={9}>No {filterView} requests</td></tr>}
+            {filterView !== 'pending' && getFilteredRequests().map(r=>renderRow(r,false))}
           </tbody>
         </table>
       </div>
-      {viewAll &&
-        <>
-          <h3 style={{marginTop:30}}>All Requests</h3>
-          <div className="table-wrapper">
-            <table className="data-table compact">
-              <thead>
-                <tr>
-                  <th>ID</th><th>Type</th><th>Team</th><th>Date</th><th>Shift(s)</th><th>Status</th><th>Reason</th><th>Created</th><th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allRequests.length===0 && <tr><td colSpan={9}>No requests submitted yet</td></tr>}
-                {allRequests.map(r=>renderRow(r,false))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      }
       {loading && <div className="inline-loading">Loading requests...</div>}
       <div className="note-box">
         Approving a shift change updates the admin schedule; approving a swap swaps the two employees’ shifts for that date.

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import { SHIFT_MAP } from '@/lib/constants';
 
 interface Props {
   headers: string[];
@@ -16,6 +17,7 @@ export default function CalendarSelector({ headers, schedule, selectedDate, onSe
     return headers.map((h, i) => ({
       date: h,
       shift: schedule[i] || '',
+      shiftTime: SHIFT_MAP[schedule[i] || ''] || schedule[i] || 'N/A',
       isOff: ['DO', 'SL', 'CL', 'EL'].includes(schedule[i] || '')
     }));
   };
@@ -63,10 +65,10 @@ export default function CalendarSelector({ headers, schedule, selectedDate, onSe
                 key={d.date}
                 className={`calendar-selector-day ${d.shift || 'empty'} ${d.date === selectedDate ? 'selected' : ''} ${d.isOff ? 'off-day' : 'work-day'}`}
                 onClick={() => handleDateClick(d.date, d.shift)}
-                title={`${d.date} - ${d.shift || 'N/A'}`}
+                title={`${d.date} - ${d.shiftTime}`}
               >
                 <span className="calendar-day-date">{d.date}</span>
-                <span className="calendar-day-shift">{d.shift || '—'}</span>
+                <span className="calendar-day-shift">{d.shiftTime || '—'}</span>
               </button>
             ))}
           </div>
