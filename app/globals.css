@@ -507,6 +507,252 @@ input:focus, select:focus, textarea:focus {
 .cal-day .cal-date { font-weight:600; font-size:.6rem; color:#7F93AA; text-transform:uppercase; letter-spacing:1px; }
 .cal-day .cal-shift { font-weight:600; color:#D4E5F8; letter-spacing:.3px; font-size:.7rem; }
 
+/* Windows 11 Style Mini Calendar */
+.mini-calendar-win11 {
+  background:#1C2532;
+  border:1px solid #273243;
+  padding:12px;
+  border-radius:12px;
+  max-width:600px;
+}
+
+.mini-calendar-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+  padding:0 4px;
+}
+
+.mini-calendar-month {
+  font-size:.8rem;
+  font-weight:600;
+  letter-spacing:.8px;
+  color:#D4E5F8;
+  text-transform:uppercase;
+}
+
+.mini-calendar-nav {
+  background:#141C27;
+  border:1px solid #253142;
+  color:#8BA2BF;
+  width:30px;
+  height:30px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:.9rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:.15s;
+}
+
+.mini-calendar-nav:hover:not(:disabled) {
+  background:#1B2532;
+  border-color:#314054;
+  color:#D4E5F8;
+}
+
+.mini-calendar-nav:disabled {
+  opacity:.3;
+  cursor:not-allowed;
+}
+
+.mini-calendar-legend {
+  display:flex;
+  gap:12px;
+  margin-bottom:10px;
+  font-size:.65rem;
+  justify-content:center;
+}
+
+.mini-calendar-legend-item {
+  display:flex;
+  align-items:center;
+  gap:5px;
+  color:#8BA2BF;
+}
+
+.legend-color {
+  width:12px;
+  height:12px;
+  border-radius:3px;
+}
+
+.legend-color.work-day {
+  background:linear-gradient(135deg,#4B89FF,#2F6BD7);
+}
+
+.legend-color.off-day {
+  background:#2A3545;
+}
+
+.mini-calendar-grid-win11 {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(75px,1fr));
+  gap:6px;
+}
+
+.mini-calendar-day-win11 {
+  background:#141C27;
+  border:1px solid #253142;
+  min-height:60px;
+  border-radius:8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  padding:6px 4px;
+  cursor:pointer;
+  transition:.15s;
+  position:relative;
+  overflow:hidden;
+}
+
+.mini-calendar-day-win11.work-day {
+  background:linear-gradient(145deg,#1B2A3E,#152031);
+  border-color:#2D4259;
+}
+
+.mini-calendar-day-win11.off-day {
+  background:#1A2230;
+  border-color:#242E3C;
+}
+
+.mini-calendar-day-win11.selected {
+  background:linear-gradient(135deg,#4B89FF,#2F6BD7);
+  border-color:#4B89FF;
+  box-shadow:0 0 12px rgba(75,137,255,.4);
+}
+
+.mini-calendar-day-win11:hover:not(.selected) {
+  background:#1F2D42;
+  border-color:#3A5171;
+  transform:translateY(-2px);
+}
+
+.mini-cal-date-win11 {
+  font-size:.65rem;
+  font-weight:600;
+  color:#7F93AA;
+  letter-spacing:.3px;
+}
+
+.mini-calendar-day-win11.selected .mini-cal-date-win11 {
+  color:#FFFFFF;
+}
+
+.mini-cal-shift-time {
+  font-size:.55rem;
+  font-weight:500;
+  color:#A5B8D0;
+  text-align:center;
+  line-height:1.2;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.mini-calendar-day-win11.selected .mini-cal-shift-time {
+  color:#FFFFFF;
+  font-weight:600;
+}
+
+/* Multi-select chips for shift view */
+.multi-select-chips {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.chip-btn {
+  background:#141C27;
+  border:1px solid #253142;
+  color:#8BA2BF;
+  padding:6px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:.7rem;
+  font-weight:500;
+  transition:.15s;
+  letter-spacing:.3px;
+}
+
+.chip-btn:hover {
+  background:#1B2532;
+  border-color:#314054;
+  color:#D4E5F8;
+}
+
+.chip-btn.selected {
+  background:linear-gradient(135deg,#4B89FF,#2F6BD7);
+  border-color:#4B89FF;
+  color:#FFFFFF;
+  font-weight:600;
+  box-shadow:0 0 8px rgba(75,137,255,.3);
+}
+
+/* Shift change preview */
+.shift-change-preview {
+  background:#141C27;
+  border:1px solid #253142;
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+}
+
+.shift-preview-item {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+
+.shift-preview-label {
+  font-size:.65rem;
+  color:#7F93AA;
+  text-transform:uppercase;
+  letter-spacing:.8px;
+  font-weight:600;
+}
+
+.shift-preview-value {
+  font-size:.85rem;
+  font-weight:600;
+  padding:8px 14px;
+  border-radius:8px;
+  letter-spacing:.3px;
+}
+
+.shift-preview-value.previous {
+  background:#1A2230;
+  color:#8BA2BF;
+  text-decoration:line-through;
+}
+
+.shift-preview-value.requested {
+  background:linear-gradient(135deg,#4B89FF,#2F6BD7);
+  color:#FFFFFF;
+}
+
+.shift-preview-arrow {
+  font-size:1.2rem;
+  color:#4B89FF;
+  font-weight:600;
+}
+
+.swap-comparison-date {
+  font-size:.6rem;
+  color:#7F93AA;
+  margin-top:2px;
+}
+
 .modal-overlay {
   position:fixed; inset:0;
   background:rgba(9,13,19,.82);

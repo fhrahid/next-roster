@@ -7,6 +7,7 @@ import EmployeeSearch from './Shared/EmployeeSearch';
 import ShiftView from './ShiftView';
 import ParticleBackground from './Shared/ParticleBackground';
 import CalendarSelector from './Shared/CalendarSelector';
+import { SHIFT_MAP } from '@/lib/constants';
 
 interface ScheduleData {
   employee: { name:string; id:string; team:string };
@@ -256,6 +257,17 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
                 </div>
               </div>
               
+              {!isViewingOtherEmployee && data.shift_changes && data.shift_changes.length > 0 && (
+                <div style={{marginTop:10, fontSize:'.7rem', color:'#8BA2BF'}}>
+                  <strong>Recent Shift Changes:</strong>
+                  {data.shift_changes.slice(0,2).map((change:any, idx:number) => (
+                    <div key={idx} style={{marginTop:4}}>
+                      {change.date}: <span style={{textDecoration:'line-through', color:'#7F93AA'}}>{change.original_shift}</span> → <span style={{color:'#37C977', fontWeight:600}}>{change.current_shift}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               {selectedDate && (
                 <div className="shift-row">
                   <div className="shift-label">Selected Date ({selectedDate}):</div>
@@ -328,12 +340,34 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
                   value={approvedRequests.length}
                   label="Approved Shifts"
                   subtitle="Approved requests"
-                  details={approvedRequests.map(r => ({
-                    date: r.date,
-                    type: r.type,
-                    original_shift: r.current_shift || r.requester_shift || 'N/A',
-                    current_shift: r.requested_shift || r.target_shift || 'N/A'
-                  }))}
+                  details={approvedRequests.map(r => {
+                    const origShift = r.current_shift || r.requester_shift || 'N/A';
+                    const newShift = r.requested_shift || r.target_shift || 'N/A';
+                    return {
+                      date: r.date,
+                      type: r.type,
+                      original_shift: SHIFT_MAP[origShift] || origShift,
+                      current_shift: SHIFT_MAP[newShift] || newShift
+                    };
+                  })}
+                  detailsType="changes"
+                />
+              )}
+              {!isViewingOtherEmployee && requests.filter(r => r.type === 'swap' && r.status === 'approved').length > 0 && (
+                <StatCard
+                  icon="🔁"
+                  value={requests.filter(r => r.type === 'swap' && r.status === 'approved').length}
+                  label="Approved Swaps"
+                  subtitle="Completed swaps"
+                  details={requests.filter(r => r.type === 'swap' && r.status === 'approved').map(r => {
+                    const myShift = r.requester_shift || 'N/A';
+                    const theirShift = r.target_shift || 'N/A';
+                    return {
+                      date: r.date,
+                      original_shift: SHIFT_MAP[myShift] || myShift,
+                      current_shift: SHIFT_MAP[theirShift] || theirShift
+                    };
+                  })}
                   detailsType="changes"
                 />
               )}
@@ -347,31 +381,6 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
                 selectedDate={selectedDate}
                 onSelect={(d,s)=>onCalendarSelect(d,s)}
               />
-            </div>
-
-            <div style={{marginTop: 40}}>
-              <h3 style={{margin:'0 0 10px'}}>My Requests</h3>
-              <div className="table-wrapper">
-                <table className="data-table small">
-                  <thead>
-                    <tr><th>ID</th><th>Type</th><th>Date</th><th>Status</th></tr>
-                  </thead>
-                  <tbody>
-                    {requests.length===0 && <tr><td colSpan={4}>No requests</td></tr>}
-                    {requests.slice(0,25).map(r=>(
-                      <tr key={r.id}>
-                        <td>{r.id}</td>
-                        <td>{r.type==='swap'?'Swap':'Change'}</td>
-                        <td>{r.date}</td>
-                        <td className={`status ${r.status}`}>{r.status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div style={{fontSize:'.55rem', color:'#7D91A5', marginTop:6}}>
-                Showing latest {Math.min(requests.length,25)}
-              </div>
             </div>
           </>
         }

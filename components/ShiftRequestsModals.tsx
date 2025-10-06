@@ -1,8 +1,8 @@
 "use client";
 import Modal from './Shared/Modal';
 import { useState, useEffect } from 'react';
-import DatePicker from './Shared/DatePicker';
 import MiniCalendar from './Shared/MiniCalendar';
+import { SHIFT_MAP } from '@/lib/constants';
 
 interface ShiftChangeProps {
   open: boolean;
@@ -72,11 +72,12 @@ export function ShiftChangeModal(props:ShiftChangeProps) {
 
       <div className="form-group">
         <label>Select Date</label>
-        {headers && headers.length > 0 ? (
-          <DatePicker 
+        {headers && mySchedule && headers.length > 0 ? (
+          <MiniCalendar 
+            headers={headers}
+            schedule={mySchedule}
             selectedDate={selectedDate}
             onSelect={setSelectedDate}
-            availableDates={headers}
           />
         ) : (
           <input type="text" value={selectedDate} disabled />
@@ -84,9 +85,16 @@ export function ShiftChangeModal(props:ShiftChangeProps) {
       </div>
 
       {selectedDate && (
-        <div className="shift-info-display">
-          <span className="shift-info-label">Current Shift:</span>
-          <span className="shift-info-badge">{getCurrentShift() || 'N/A'}</span>
+        <div className="shift-change-preview">
+          <div className="shift-preview-item">
+            <span className="shift-preview-label">Previous Shift</span>
+            <span className="shift-preview-value previous">{SHIFT_MAP[getCurrentShift()] || getCurrentShift() || 'N/A'}</span>
+          </div>
+          <div className="shift-preview-arrow">→</div>
+          <div className="shift-preview-item">
+            <span className="shift-preview-label">Requested Shift</span>
+            <span className="shift-preview-value requested">{requested ? (SHIFT_MAP[requested] || requested) : '—'}</span>
+          </div>
         </div>
       )}
 
@@ -94,7 +102,7 @@ export function ShiftChangeModal(props:ShiftChangeProps) {
         <label>Requested Shift</label>
         <select value={requested} onChange={e=>setRequested(e.target.value)}>
           <option value="">Select...</option>
-          {shiftCodes.map(c=> <option key={c} value={c}>{c}</option>)}
+          {shiftCodes.map(c=> <option key={c} value={c}>{SHIFT_MAP[c] || c}</option>)}
         </select>
       </div>
       <div className="form-group">
@@ -239,13 +247,6 @@ export function SwapRequestModal(props:SwapProps) {
       </div>
 
       {selectedDate && (
-        <div className="shift-info-display">
-          <span className="shift-info-label">Your Shift:</span>
-          <span className="shift-info-badge">{getMyShift() || 'N/A'}</span>
-        </div>
-      )}
-
-      {selectedDate && (
         <>
           <div className="form-group">
             <label>Search Team Member</label>
@@ -265,7 +266,7 @@ export function SwapRequestModal(props:SwapProps) {
               <select value={target} onChange={e=>setTarget(e.target.value)}>
                 <option value="">Select team member...</option>
                 {filteredMembers.map(m=>(
-                  <option key={m.id} value={m.id}>{m.name} - {m.shift}</option>
+                  <option key={m.id} value={m.id}>{m.name} - {SHIFT_MAP[m.shift] || m.shift}</option>
                 ))}
               </select>
             )}
@@ -275,12 +276,14 @@ export function SwapRequestModal(props:SwapProps) {
             <div className="swap-comparison">
               <div className="swap-comparison-item">
                 <div className="swap-comparison-label">You</div>
-                <div className="swap-comparison-shift">{getMyShift()}</div>
+                <div className="swap-comparison-shift">{SHIFT_MAP[getMyShift()] || getMyShift()}</div>
+                <div className="swap-comparison-date">{selectedDate}</div>
               </div>
               <div className="swap-comparison-arrow">⇄</div>
               <div className="swap-comparison-item">
                 <div className="swap-comparison-label">{targetEmployee.name}</div>
-                <div className="swap-comparison-shift">{targetEmployee.shift}</div>
+                <div className="swap-comparison-shift">{SHIFT_MAP[targetEmployee.shift] || targetEmployee.shift}</div>
+                <div className="swap-comparison-date">{selectedDate}</div>
               </div>
             </div>
           )}
