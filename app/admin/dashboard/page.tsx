@@ -4,6 +4,7 @@ import DataSyncTab from '@/components/AdminTabs/DataSyncTab';
 import GoogleLinksTab from '@/components/AdminTabs/GoogleLinksTab';
 import TeamManagementTab from '@/components/AdminTabs/TeamManagementTab';
 import UserManagementTab from '@/components/AdminTabs/UserManagementTab';
+import ProfileTab from '@/components/AdminTabs/ProfileTab';
 import ScheduleRequestsTab from '@/components/AdminTabs/ScheduleRequestsTab';
 import GoogleDataTab from '@/components/AdminTabs/GoogleDataTab';
 import AdminDataTab from '@/components/AdminTabs/AdminDataTab';
@@ -22,6 +23,7 @@ export default function AdminDashboardPage() {
       <ScheduleRequestsTab id="schedule-requests" />
       <TeamManagementTab id="team-management" />
       <UserManagementTab id="user-management" />
+      <ProfileTab id="profile" currentUser={user} />
       <DataSyncTab id="data-sync" />
       <GoogleLinksTab id="google-links" />
       <GoogleDataTab id="google-data" />

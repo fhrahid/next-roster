@@ -6,6 +6,7 @@ const tabs = [
   { id:'schedule-requests', label:'📋 Schedule Requests'},
   { id:'team-management', label:'👥 Team Management'},
   { id:'user-management', label:'🔐 User Management'},
+  { id:'profile', label:'👤 My Profile'},
   { id:'data-sync', label:'🔄 Data Sync'},
   { id:'google-links', label:'🔗 Google Sheets'},
   { id:'google-data', label:'📄 Google Data'},
