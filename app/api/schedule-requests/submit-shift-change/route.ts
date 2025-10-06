@@ -3,7 +3,8 @@ import { addScheduleChangeRequest } from '@/lib/dataStore';
 
 export async function POST(req: NextRequest) {
   const {employeeId, employeeName, team, date, currentShift, requestedShift, reason} = await req.json();
-  if (![employeeId, employeeName, team, date, currentShift, requestedShift, reason].every(Boolean)) {
+  // currentShift can be empty string, so we check it separately
+  if (!employeeId || !employeeName || !team || !date || !requestedShift || !reason) {
     return NextResponse.json({success:false, error:'All fields required'});
   }
   const r = addScheduleChangeRequest({

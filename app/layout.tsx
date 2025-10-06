@@ -7,6 +7,7 @@ import '../styles/requests.css';
 import '../styles/modern-ui.css';
 import '../styles/calendar-selector.css';
 import '../styles/dashboard.css';
+import '../styles/mini-schedule-calendar.css';
 
 export const metadata = {
   title: 'Cartup CxP Roster',

@@ -7,8 +7,13 @@ export async function POST(req: NextRequest) {
     targetEmployeeId, targetEmployeeName,
     team, date, requesterShift, targetShift, reason
   } = await req.json();
-  if (![requesterId, requesterName, targetEmployeeId, targetEmployeeName, team, date, requesterShift, targetShift, reason].every(Boolean)) {
+  // Shifts can be empty strings, so we check them separately
+  if (!requesterId || !requesterName || !targetEmployeeId || !targetEmployeeName || !team || !date || !reason) {
     return NextResponse.json({success:false, error:'All fields are required'});
+  }
+  // Ensure shifts are defined (can be empty string)
+  if (requesterShift === undefined || requesterShift === null || targetShift === undefined || targetShift === null) {
+    return NextResponse.json({success:false, error:'Shift information is required'});
   }
   const r = addSwapRequest({
     requester_id: requesterId,
