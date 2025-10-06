@@ -74,3 +74,15 @@ export interface ScheduleRequestsFile {
 export interface GoogleLinks { [monthYear: string]: string; }
 
 export interface LoginPayload { username: string; password: string; }
+
+export interface AdminUser {
+  username: string;
+  password: string;
+  role: string;
+  full_name: string;
+  created_at: string;
+}
+
+export interface AdminUsersFile {
+  users: AdminUser[];
+}

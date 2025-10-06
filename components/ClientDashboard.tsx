@@ -6,6 +6,7 @@ import StatCard from './Shared/StatCard';
 import EmployeeSearch from './Shared/EmployeeSearch';
 import ShiftView from './ShiftView';
 import ParticleBackground from './Shared/ParticleBackground';
+import CalendarSelector from './Shared/CalendarSelector';
 
 interface ScheduleData {
   employee: { name:string; id:string; team:string };
@@ -54,6 +55,10 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
   const [headers,setHeaders]=useState<string[]>([]);
   const [mySchedule,setMySchedule]=useState<string[]>([]);
   const [refreshing,setRefreshing]=useState(false);
+  const [viewingEmployeeId,setViewingEmployeeId]=useState<string>(employeeId);
+  const [viewingEmployeeData,setViewingEmployeeData]=useState<ScheduleData|null>(null);
+  const [viewingEmployeeSchedule,setViewingEmployeeSchedule]=useState<string[]>([]);
+  const [approvedRequests,setApprovedRequests]=useState<RequestHistory[]>([]);
 
   async function loadSchedule() {
     setLoading(true); setError('');
@@ -93,6 +98,10 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
       // sort newest
       const sorted = res.requests.sort((a:any,b:any)=> (b.created_at || '').localeCompare(a.created_at||''));
       setRequests(sorted);
+      
+      // Filter approved requests for stat card
+      const approved = sorted.filter((r: RequestHistory) => r.status === 'approved');
+      setApprovedRequests(approved);
     }
   }
 
@@ -124,14 +133,32 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
   }
 
   const handleEmployeeSearch = async (employee: any) => {
-    // Navigate to view another employee's schedule
+    // Load the employee's schedule data
     const res = await fetch(`/api/my-schedule/${employee.id}`);
     const j = await res.json();
     if (j.success) {
-      // Display a modal or section with the employee's schedule
-      alert(`Viewing ${employee.name}'s schedule - Feature can be expanded`);
+      setViewingEmployeeId(employee.id);
+      setViewingEmployeeData(j);
+      
+      // Load their schedule from roster
+      if (roster?.teams) {
+        Object.entries(roster.teams).forEach(([teamName, teamEmployees]: [string, any]) => {
+          const emp = teamEmployees.find((e: any) => e.id === employee.id);
+          if (emp) {
+            setViewingEmployeeSchedule(emp.schedule);
+          }
+        });
+      }
     }
   };
+
+  const resetToMySchedule = () => {
+    setViewingEmployeeId(employeeId);
+    setViewingEmployeeData(null);
+    setViewingEmployeeSchedule([]);
+  };
+
+  const isViewingOtherEmployee = viewingEmployeeId !== employeeId;
 
   const getAllEmployees = () => {
     if (!roster?.teams) return [];
@@ -186,22 +213,63 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
             <div className="shifts-panel" style={{display:'block'}}>
               <div className="employee-header">
                 <div>
-                  <div className="employee-name">{data.employee.name}</div>
-                  <div className="employee-id">{data.employee.id}</div>
+                  <div className="employee-name">
+                    {isViewingOtherEmployee && viewingEmployeeData 
+                      ? viewingEmployeeData.employee.name 
+                      : data.employee.name}
+                  </div>
+                  <div className="employee-id">
+                    {isViewingOtherEmployee && viewingEmployeeData 
+                      ? viewingEmployeeData.employee.id 
+                      : data.employee.id}
+                  </div>
                 </div>
-                <div className="employee-category">{data.employee.team}</div>
+                <div className="employee-category">
+                  {isViewingOtherEmployee && viewingEmployeeData 
+                    ? viewingEmployeeData.employee.team 
+                    : data.employee.team}
+                </div>
+              </div>
+              
+              {isViewingOtherEmployee && (
+                <div style={{marginBottom: 10}}>
+                  <button className="btn small" onClick={resetToMySchedule}>
+                    ← Back to My Schedule
+                  </button>
+                </div>
+              )}
+
+              <div className="shift-row">
+                <div className="shift-label">
+                  Today ({isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.today.date : data.today.date || 'N/A'}):
+                </div>
+                <div className="shift-code">
+                  {isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.today.shift : data.today.shift}
+                </div>
               </div>
               <div className="shift-row">
-                <div className="shift-label">Today ({data.today.date || 'N/A'}):</div>
-                <div className="shift-code">{data.today.shift}</div>
+                <div className="shift-label">
+                  Tomorrow ({isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.tomorrow.date : data.tomorrow.date || 'N/A'}):
+                </div>
+                <div className="shift-code">
+                  {isViewingOtherEmployee && viewingEmployeeData ? viewingEmployeeData.tomorrow.shift : data.tomorrow.shift}
+                </div>
               </div>
-              <div className="shift-row">
-                <div className="shift-label">Tomorrow ({data.tomorrow.date || 'N/A'}):</div>
-                <div className="shift-code">{data.tomorrow.shift}</div>
-              </div>
+              
+              {selectedDate && (
+                <div className="shift-row">
+                  <div className="shift-label">Selected Date ({selectedDate}):</div>
+                  <div className="shift-code">{selectedShift || 'N/A'}</div>
+                </div>
+              )}
+
               <div className="actions-row" style={{marginTop:14, flexWrap: 'wrap'}}>
-                <button className="btn primary small" onClick={openShiftChange}>✏️ Request Shift Change</button>
-                <button className="btn small" onClick={openSwap}>🔁 Request Swap</button>
+                {!isViewingOtherEmployee && (
+                  <>
+                    <button className="btn primary small" onClick={openShiftChange}>✏️ Request Shift Change</button>
+                    <button className="btn small" onClick={openSwap}>🔁 Request Swap</button>
+                  </>
+                )}
                 {roster && <ShiftView roster={roster} headers={headers} />}
               </div>
             </div>
@@ -220,35 +288,63 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
             <div className="dashboard-stats">
               <StatCard
                 icon="📅"
-                value={data.summary.next_work_days_count}
+                value={isViewingOtherEmployee && viewingEmployeeData 
+                  ? viewingEmployeeData.summary.next_work_days_count 
+                  : data.summary.next_work_days_count}
                 label="Upcoming Days"
                 subtitle="Next 7 view"
-                details={data.upcoming_work_days}
+                details={isViewingOtherEmployee && viewingEmployeeData 
+                  ? viewingEmployeeData.upcoming_work_days 
+                  : data.upcoming_work_days}
                 detailsType="workdays"
               />
               <StatCard
                 icon="🏖️"
-                value={data.summary.planned_time_off_count}
+                value={isViewingOtherEmployee && viewingEmployeeData 
+                  ? viewingEmployeeData.summary.planned_time_off_count 
+                  : data.summary.planned_time_off_count}
                 label="Planned Time Off"
                 subtitle="30 days span"
-                details={data.planned_time_off}
+                details={isViewingOtherEmployee && viewingEmployeeData 
+                  ? viewingEmployeeData.planned_time_off 
+                  : data.planned_time_off}
                 detailsType="timeoff"
               />
               <StatCard
                 icon="🔄"
-                value={data.summary.shift_changes_count}
+                value={isViewingOtherEmployee && viewingEmployeeData 
+                  ? viewingEmployeeData.summary.shift_changes_count 
+                  : data.summary.shift_changes_count}
                 label="Shift Changes"
                 subtitle="Vs original"
-                details={data.shift_changes}
+                details={isViewingOtherEmployee && viewingEmployeeData 
+                  ? viewingEmployeeData.shift_changes 
+                  : data.shift_changes}
                 detailsType="changes"
               />
+              {!isViewingOtherEmployee && approvedRequests.length > 0 && (
+                <StatCard
+                  icon="✅"
+                  value={approvedRequests.length}
+                  label="Approved Shifts"
+                  subtitle="Approved requests"
+                  details={approvedRequests.map(r => ({
+                    date: r.date,
+                    type: r.type,
+                    original_shift: r.current_shift || r.requester_shift || 'N/A',
+                    current_shift: r.requested_shift || r.target_shift || 'N/A'
+                  }))}
+                  detailsType="changes"
+                />
+              )}
             </div>
 
             <div style={{marginTop: 30}}>
-              <h3 style={{marginBottom: 10}}>My Schedule Calendar</h3>
-              <Calendar
+              <h3 style={{marginBottom: 10}}>Schedule Calendar</h3>
+              <CalendarSelector
                 headers={headers}
-                schedule={mySchedule}
+                schedule={isViewingOtherEmployee ? viewingEmployeeSchedule : mySchedule}
+                selectedDate={selectedDate}
                 onSelect={(d,s)=>onCalendarSelect(d,s)}
               />
             </div>
