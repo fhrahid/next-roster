@@ -1,0 +1,17 @@
+.request-badge {
+  background:#1D2835;
+  border:1px solid #2A3747;
+  padding:4px 8px;
+  border-radius:8px;
+  font-size:.55rem;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  font-weight:600;
+  color:#8DA3BB;
+  display:inline-flex;
+  gap:4px;
+  align-items:center;
+}
+.request-badge.approved { color:#3DD581; border-color:#256943; }
+.request-badge.rejected { color:#FF6B6B; border-color:#7A3131; }
+.request-badge.pending { color:#FFB347; border-color:#7A5A2A; }

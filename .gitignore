@@ -1,0 +1,32 @@
+# Dependencies
+node_modules
+.next
+out
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs
+*.log
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode
+.idea
+
+# Coverage
+coverage
+
+# Data persistence (keep if you commit sample)
+# Uncomment the next line to ignore runtime data changes
+# data/*.json

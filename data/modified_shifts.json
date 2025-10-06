@@ -1,0 +1,27 @@
+{
+  "modifications": [
+    {
+      "employee_id": "SLL-88717",
+      "date_index": 6,
+      "old_shift": "D2",
+      "new_shift": "SL",
+      "employee_name": "Efat Anan Shekh",
+      "team_name": "VOICE",
+      "date_header": "7Oct",
+      "modified_by": "Schedule Request (Approved by admin)",
+      "timestamp": "2025-10-06T12:15:48.081Z",
+      "month_year": "2025-10"
+    }
+  ],
+  "monthly_stats": {
+    "2025-10": {
+      "total_modifications": 1,
+      "employees_modified": [
+        "SLL-88717"
+      ],
+      "modifications_by_user": {
+        "Schedule Request (Approved by admin)": 1
+      }
+    }
+  }
+}

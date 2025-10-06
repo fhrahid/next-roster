@@ -1,0 +1,22 @@
+{
+  "shift_change_requests": [
+    {
+      "employee_id": "SLL-88717",
+      "employee_name": "Efat Anan Shekh",
+      "team": "VOICE",
+      "date": "7Oct",
+      "current_shift": "D2",
+      "requested_shift": "SL",
+      "reason": "Ghumabo tai",
+      "id": "shift_change_1",
+      "status": "approved",
+      "type": "shift_change",
+      "created_at": "2025-10-06T12:15:32.591Z",
+      "approved_at": "2025-10-06T12:15:48.080Z",
+      "approved_by": "admin"
+    }
+  ],
+  "swap_requests": [],
+  "approved_count": 1,
+  "pending_count": 0
+}

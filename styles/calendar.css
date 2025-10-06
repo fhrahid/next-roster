@@ -1,0 +1,10 @@
+.cal-day.DO { border-color:#3A4757; color:#647486; opacity:.65; }
+.cal-day.SL, .cal-day.CL, .cal-day.EL {
+  border-color:#4E5E72;
+  background:#1F2A35;
+  color:#A5B5C8;
+}
+.cal-day.selected {
+  outline:2px solid #4B89FF;
+  outline-offset:2px;
+}
