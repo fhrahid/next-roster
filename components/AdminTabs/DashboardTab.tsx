@@ -24,6 +24,10 @@ interface DashboardStats {
 export default function DashboardTab({ id }: Props) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
 
   async function loadDashboard() {
     setLoading(true);
@@ -54,19 +58,37 @@ export default function DashboardTab({ id }: Props) {
             : 0
         };
 
-        // Calculate team stats
+        // Calculate team stats based on selected month
         const teamStats: any = {};
-        if (adminRes.teams) {
+        if (adminRes.teams && adminRes.headers) {
+          const [year, month] = selectedMonth.split('-').map(Number);
+          const monthStart = new Date(year, month - 1, 1);
+          const monthEnd = new Date(year, month, 0);
+          
           Object.entries(adminRes.teams).forEach(([teamName, employees]: [string, any]) => {
             let workingDays = 0;
             let offDays = 0;
+            let modifiedShifts = 0;
             
             employees.forEach((emp: any) => {
-              emp.schedule.forEach((shift: string) => {
-                if (['DO', 'SL', 'CL', 'EL', ''].includes(shift)) {
-                  offDays++;
-                } else {
-                  workingDays++;
+              adminRes.headers.forEach((header: string, idx: number) => {
+                // Parse date from header (format: "Dec 1" or similar)
+                const dateStr = header;
+                const dateParts = dateStr.split(' ');
+                const headerMonth = dateParts[0];
+                const headerDay = parseInt(dateParts[1] || '1');
+                
+                // Simple month check
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const headerMonthNum = monthNames.indexOf(headerMonth) + 1;
+                
+                if (headerMonthNum === month) {
+                  const shift = emp.schedule[idx];
+                  if (['DO', 'SL', 'CL', 'EL', ''].includes(shift)) {
+                    offDays++;
+                  } else {
+                    workingDays++;
+                  }
                 }
               });
             });
@@ -74,7 +96,8 @@ export default function DashboardTab({ id }: Props) {
             teamStats[teamName] = {
               total_employees: employees.length,
               working_days: workingDays,
-              off_days: offDays
+              off_days: offDays,
+              modified_shifts: modifiedShifts
             };
           });
         }
@@ -91,7 +114,7 @@ export default function DashboardTab({ id }: Props) {
     setLoading(false);
   }
 
-  useEffect(() => { loadDashboard(); }, []);
+  useEffect(() => { loadDashboard(); }, [selectedMonth]);
 
   if (loading) {
     return (
@@ -152,35 +175,58 @@ export default function DashboardTab({ id }: Props) {
 
         {/* Team Health Overview */}
         <div className="dashboard-card">
-          <h3>👥 Team Health Overview</h3>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15}}>
+            <h3 style={{margin: 0}}>👥 Team Health Overview</h3>
+            <input 
+              type="month" 
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              style={{
+                padding: '6px 12px',
+                background: '#0F1419',
+                border: '1px solid #2A3140',
+                borderRadius: '6px',
+                color: '#E5EAF0',
+                fontSize: '0.85rem'
+              }}
+            />
+          </div>
           <div className="team-stats-list">
-            {Object.entries(stats.team_stats).map(([teamName, teamData]) => (
-              <div key={teamName} className="team-stat-item">
-                <div className="team-name">{teamName}</div>
-                <div className="team-metrics">
-                  <div className="team-metric">
-                    <span className="metric-label">Employees:</span>
-                    <span className="metric-value">{teamData.total_employees}</span>
+            {Object.entries(stats.team_stats).map(([teamName, teamData]) => {
+              const total = teamData.working_days + teamData.off_days;
+              const healthPercentage = total > 0 ? Math.round((teamData.working_days / total) * 100) : 0;
+              return (
+                <div key={teamName} className="team-stat-item">
+                  <div className="team-name">{teamName}</div>
+                  <div className="team-metrics">
+                    <div className="team-metric">
+                      <span className="metric-label">Employees:</span>
+                      <span className="metric-value">{teamData.total_employees}</span>
+                    </div>
+                    <div className="team-metric">
+                      <span className="metric-label">Working Days:</span>
+                      <span className="metric-value success">{teamData.working_days}</span>
+                    </div>
+                    <div className="team-metric">
+                      <span className="metric-label">Off Days:</span>
+                      <span className="metric-value danger">{teamData.off_days}</span>
+                    </div>
+                    <div className="team-metric">
+                      <span className="metric-label">Health:</span>
+                      <span className="metric-value">{healthPercentage}%</span>
+                    </div>
                   </div>
-                  <div className="team-metric">
-                    <span className="metric-label">Working Days:</span>
-                    <span className="metric-value success">{teamData.working_days}</span>
-                  </div>
-                  <div className="team-metric">
-                    <span className="metric-label">Off Days:</span>
-                    <span className="metric-value danger">{teamData.off_days}</span>
+                  <div className="team-bar">
+                    <div 
+                      className="team-bar-working" 
+                      style={{ 
+                        width: `${healthPercentage}%` 
+                      }}
+                    ></div>
                   </div>
                 </div>
-                <div className="team-bar">
-                  <div 
-                    className="team-bar-working" 
-                    style={{ 
-                      width: `${(teamData.working_days / (teamData.working_days + teamData.off_days)) * 100}%` 
-                    }}
-                  ></div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

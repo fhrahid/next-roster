@@ -13,6 +13,8 @@ export default function ProfileTab({ id, currentUser }: Props) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [userDetails, setUserDetails] = useState<any>(null);
+  const [profilePicture, setProfilePicture] = useState<string>('');
+  const [uploadingPic, setUploadingPic] = useState(false);
 
   async function loadProfile() {
     const res = await fetch('/api/admin/users/list').then(r => r.json());
@@ -109,28 +111,74 @@ export default function ProfileTab({ id, currentUser }: Props) {
 
       <div className="section-card">
         <h3>Profile Information</h3>
-        {userDetails && (
-          <div className="profile-info-display">
-            <div className="profile-info-item">
-              <span className="profile-label">Username:</span>
-              <span className="profile-value">{userDetails.username}</span>
+        
+        <div style={{display: 'flex', gap: 30, alignItems: 'flex-start', marginBottom: 20}}>
+          <div>
+            <div style={{
+              width: 120,
+              height: 120,
+              borderRadius: '50%',
+              background: profilePicture ? `url(${profilePicture}) center/cover` : 'linear-gradient(135deg, #4A7BD0 0%, #6B9FE8 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '3rem',
+              marginBottom: 10
+            }}>
+              {!profilePicture && '👤'}
             </div>
-            <div className="profile-info-item">
-              <span className="profile-label">Role:</span>
-              <span className={`badge ${userDetails.role === 'super_admin' ? 'primary' : 'secondary'}`}>
-                {userDetails.role}
-              </span>
-            </div>
-            <div className="profile-info-item">
-              <span className="profile-label">Account Created:</span>
-              <span className="profile-value">
-                {new Date(userDetails.created_at).toLocaleDateString()}
-              </span>
-            </div>
+            <input 
+              type="file" 
+              accept="image/*"
+              id="profile-pic-upload"
+              style={{display: 'none'}}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploadingPic(true);
+                // Convert to base64
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setProfilePicture(reader.result as string);
+                  setUploadingPic(false);
+                };
+                reader.readAsDataURL(file);
+              }}
+            />
+            <button 
+              className="btn small" 
+              onClick={() => document.getElementById('profile-pic-upload')?.click()}
+              disabled={uploadingPic}
+            >
+              {uploadingPic ? 'Uploading...' : '📷 Upload Picture'}
+            </button>
           </div>
-        )}
+          
+          <div style={{flex: 1}}>
+            {userDetails && (
+              <div className="profile-info-display">
+                <div className="profile-info-item">
+                  <span className="profile-label">Username:</span>
+                  <span className="profile-value">{userDetails.username}</span>
+                </div>
+                <div className="profile-info-item">
+                  <span className="profile-label">Role:</span>
+                  <span className="profile-value">
+                    {userDetails.role === 'super_admin' ? 'Head of Department' : 'Manager'}
+                  </span>
+                </div>
+                <div className="profile-info-item">
+                  <span className="profile-label">Account Created:</span>
+                  <span className="profile-value">
+                    {new Date(userDetails.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
-        <div className="form-grid two" style={{marginTop: 20}}>
+        <div className="form-grid two">
           <div>
             <label>Full Name</label>
             <input 
