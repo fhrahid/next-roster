@@ -80,6 +80,11 @@
   box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
 }
 
+.legend-dot.do {
+  background: #F44336;
+  box-shadow: 0 0 6px rgba(244, 67, 54, 0.4);
+}
+
 .legend-dot.off {
   background: #647486;
   box-shadow: 0 0 6px rgba(100, 116, 134, 0.4);
@@ -89,7 +94,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
   gap: 8px;
-  max-height: 400px;
+  max-height: 250px;
   overflow-y: auto;
   padding: 2px;
 }
@@ -105,7 +110,7 @@
   justify-content: center;
   gap: 4px;
   transition: all 0.2s ease;
-  cursor: default;
+  cursor: pointer;
   background: rgba(255, 255, 255, 0.02);
 }
 
@@ -121,6 +126,16 @@
 
 .mini-schedule-day.shift-work .day-shift {
   color: #4CAF50;
+  font-weight: 600;
+}
+
+.mini-schedule-day.shift-do {
+  border-color: #F44336;
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.mini-schedule-day.shift-do .day-shift {
+  color: #F44336;
   font-weight: 600;
 }
 
@@ -142,6 +157,17 @@
 
 .mini-schedule-day.shift-empty .day-shift {
   color: #647486;
+}
+
+.mini-schedule-day.selected {
+  background: linear-gradient(135deg, #2E5090 0%, #3D64A8 100%);
+  border-color: #4A7BD0;
+  box-shadow: 0 4px 12px rgba(74, 123, 208, 0.3);
+}
+
+.mini-schedule-day.selected .day-number,
+.mini-schedule-day.selected .day-shift {
+  color: #E5EAF0;
 }
 
 .day-number {

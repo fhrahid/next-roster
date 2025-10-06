@@ -6,7 +6,6 @@ import StatCard from './Shared/StatCard';
 import EmployeeSearch from './Shared/EmployeeSearch';
 import ShiftView from './ShiftView';
 import ParticleBackground from './Shared/ParticleBackground';
-import CalendarSelector from './Shared/CalendarSelector';
 import MiniScheduleCalendar from './Shared/MiniScheduleCalendar';
 
 interface ScheduleData {
@@ -60,6 +59,7 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
   const [viewingEmployeeData,setViewingEmployeeData]=useState<ScheduleData|null>(null);
   const [viewingEmployeeSchedule,setViewingEmployeeSchedule]=useState<string[]>([]);
   const [approvedRequests,setApprovedRequests]=useState<RequestHistory[]>([]);
+  const [showCalendar,setShowCalendar]=useState(false);
 
   async function loadSchedule() {
     setLoading(true); setError('');
@@ -303,16 +303,31 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
                 </div>
               )}
 
-              <div style={{display: 'flex', gap: '20px', marginTop: 14, flexWrap: 'wrap'}}>
+              <div style={{marginTop: 14}}>
                 {!isViewingOtherEmployee && headers.length > 0 && mySchedule.length > 0 && (
-                  <div className="mini-calendar-section">
-                    <MiniScheduleCalendar 
-                      headers={headers}
-                      schedule={mySchedule}
-                    />
+                  <div style={{marginBottom: 10}}>
+                    <button 
+                      className="btn small" 
+                      onClick={() => setShowCalendar(!showCalendar)}
+                      style={{marginBottom: 10}}
+                    >
+                      {showCalendar ? '📅 Hide Calendar' : '📅 Show Calendar'}
+                    </button>
+                    {showCalendar && (
+                      <div className="mini-calendar-section">
+                        <MiniScheduleCalendar 
+                          headers={headers}
+                          schedule={mySchedule}
+                          selectedDate={selectedDate}
+                          onSelect={(d,s)=>onCalendarSelect(d,s)}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
-                
+              </div>
+
+              <div style={{display: 'flex', gap: '20px', marginTop: 14, flexWrap: 'wrap'}}>
                 <div style={{flex: 1, minWidth: '250px'}}>
                   <div className="actions-row" style={{marginBottom: 10, flexWrap: 'wrap'}}>
                     {!isViewingOtherEmployee && (
@@ -390,16 +405,6 @@ export default function ClientDashboard({employeeId, fullName, onLogout}:Props) 
                   detailsType="changes"
                 />
               )}
-            </div>
-
-            <div style={{marginTop: 30}}>
-              <h3 style={{marginBottom: 10}}>Schedule Calendar</h3>
-              <CalendarSelector
-                headers={headers}
-                schedule={isViewingOtherEmployee ? viewingEmployeeSchedule : mySchedule}
-                selectedDate={selectedDate}
-                onSelect={(d,s)=>onCalendarSelect(d,s)}
-              />
             </div>
 
             <div style={{marginTop: 40}}>

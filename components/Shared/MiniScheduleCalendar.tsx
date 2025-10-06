@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 interface Props {
   headers: string[];
   schedule: string[];
+  selectedDate?: string;
+  onSelect?: (date: string, shift: string) => void;
 }
 
-export default function MiniScheduleCalendar({ headers, schedule }: Props) {
+export default function MiniScheduleCalendar({ headers, schedule, selectedDate, onSelect }: Props) {
   const [currentMonthOffset, setCurrentMonthOffset] = useState(0);
 
   // Get days with shifts
@@ -57,8 +59,15 @@ export default function MiniScheduleCalendar({ headers, schedule }: Props) {
 
   const getShiftClassName = (shift: string) => {
     if (!shift) return 'shift-empty';
-    if (['DO', 'SL', 'CL', 'EL'].includes(shift)) return 'shift-off';
+    if (shift === 'DO') return 'shift-do';
+    if (['SL', 'CL', 'EL'].includes(shift)) return 'shift-off';
     return 'shift-work';
+  };
+
+  const handleDateClick = (date: string, shift: string) => {
+    if (onSelect) {
+      onSelect(date, shift);
+    }
   };
 
   return (
@@ -89,17 +98,22 @@ export default function MiniScheduleCalendar({ headers, schedule }: Props) {
           <span>Working</span>
         </div>
         <div className="legend-item">
+          <span className="legend-dot do"></span>
+          <span>Day Off</span>
+        </div>
+        <div className="legend-item">
           <span className="legend-dot off"></span>
-          <span>Off/Leave</span>
+          <span>Leave</span>
         </div>
       </div>
 
       <div className="mini-schedule-grid">
         {currentDays.map((day, idx) => (
-          <div
+          <button
             key={idx}
-            className={`mini-schedule-day ${getShiftClassName(day.shift)}`}
+            className={`mini-schedule-day ${getShiftClassName(day.shift)} ${day.date === selectedDate ? 'selected' : ''}`}
             title={`${day.date} - ${day.shift || 'N/A'}`}
+            onClick={() => handleDateClick(day.date, day.shift)}
           >
             <div className="day-number">
               {day.date.split(' ')[0]}
@@ -107,7 +121,7 @@ export default function MiniScheduleCalendar({ headers, schedule }: Props) {
             <div className="day-shift">
               {day.shift || '—'}
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>
