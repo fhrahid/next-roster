@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import RosterTable from '../Shared/RosterTable';
+import AdminShiftView from './AdminShiftView';
 
 interface Props { id: string; }
 
@@ -53,15 +53,14 @@ export default function AdminDataTab({id}:Props) {
       </div>
       {loading && <div className="inline-loading">Loading admin data...</div>}
       {data &&
-        <RosterTable
+        <AdminShiftView
+          roster={data}
           headers={data.headers}
-          teams={data.teams}
-          editable={true}
           onUpdateShift={updateShift}
         />
       }
       <div className="note-box">
-        Click a shift cell to edit. Use valid shift codes (e.g. M2, M3, D1, D2, DO, SL, CL, EL).
+        Click on an employee row to edit their shift. Use valid shift codes (e.g. M2, M3, D1, D2, DO, SL, CL, EL).
       </div>
     </div>
   );
